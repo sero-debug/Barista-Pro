@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Barista Pro | Calculadora de Ratios y Estimador de Cafeína</title>
+  <meta name="description" content="Calculadora profesional de barismo y estimador de cafeína para café de especialidad. Métodos V60, Espresso, Chemex, AeroPress, Cold Brew y más.">
+  <meta name="theme-color" content="#100C0A">
+  <!-- PWA & Mobile Capabilities -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Barista Pro">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+
+  <style>
+    /* =========================================================
+       VARIABLES Y PALETA DE TONOS (ESPRESSO, CREMA, ÁMBAR)
+       ========================================================= */
+    :root {
+      --bg-espresso-deep: #100C0A;
+      --bg-espresso-surface: #191411;
+      --bg-card: #201A16;
+      --bg-card-hover: #261F1B;
+      --bg-card-subtle: #16120F;
+      --border-subtle: rgba(220, 190, 160, 0.12);
+      --border-active: rgba(224, 168, 88, 0.45);
+      
+      --crema-pure: #FAF6F0;
+      --crema-soft: #EDE4D8;
+      --crema-muted: #A89B8C;
+      --crema-dim: #706456;
+
+      --amber-gold: #E09F3E;
+      --amber-bright: #F4B251;
+      --amber-glow: rgba(224, 159, 62, 0.22);
+      --amber-glow-strong: rgba(244, 178, 81, 0.35);
+
+      --charcoal-dark: #2A221C;
+      --charcoal-border: #3A3029;
+
+      /* Estado cafeína */
+      --badge-mild-bg: rgba(67, 160, 71, 0.16);
+      --badge-mild-border: rgba(76, 175, 80, 0.35);
+      --badge-mild-text: #81C784;
+
+      --badge-med-bg: rgba(224, 159, 62, 0.16);
+      --badge-med-border: rgba(224, 159, 62, 0.4);
+      --badge-med-text: #FFB74D;
+
+      --badge-intense-bg: rgba(230, 81, 0, 0.18);
+      --badge-intense-border: rgba(255, 112, 67, 0.45);
+      --badge-intense-text: #FF8A65;
+
+      --badge-max-bg: rgba(211, 47, 47, 0.22);
+      --badge-max-border: rgba(239, 83, 80, 0.55);
+      --badge-max-text: #EF5350;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-pill: 9999px;
+
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.35);
+      --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-subtle);
+      --shadow-amber: 0 8px 24px -4px var(--amber-glow);
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-espresso-deep);
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(224, 159, 62, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 69, 19, 0.07) 0%, transparent 45%);
+      color: var(--crema-pure);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 48px;
+    }
+
+    /* App Shell Container */
+    .app-container {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* =========================================================
+       HEADER & BRANDING
+       ========================================================= */
+    .brand-header {
+      text-align: center;
+      padding: 18px 12px 10px;
+    }
+
+    .brand-tagline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(224, 159, 62, 0.12);
+      border: 1px solid var(--border-active);
+      color: var(--amber-bright);
+      padding: 4px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.73rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .brand-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.15rem;
+      font-weight: 600;
+      color: var(--crema-pure);
+      letter-spacing: -0.02em;
+      line-height: 1.18;
+      margin-bottom: 6px;
+    }
+
+    .brand-header h1 span {
+      color: var(--amber-bright);
+      font-style: italic;
+    }
+
+    .brand-header p {
+      color: var(--crema-muted);
+      font-size: 0.88rem;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    /* =========================================================
+       CARD ARCHITECTURE
+       ========================================================= */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(224, 159, 62, 0.35), transparent);
+      opacity: 0.8;
+    }
+
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--crema-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title svg {
+      width: 15px;
+      height: 15px;
+      fill: var(--amber-gold);
+    }
+
+    /* =========================================================
+       SELECTOR DE MÉTODOS (CHIPS / BOTONES TÁCTILES)
+       ========================================================= */
+    .methods-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 520px) {
+      .methods-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .method-chip {
+      appearance: none;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      color: var(--crema-soft);
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      transition: var(--transition);
+      position: relative;
+      user-select: none;
+    }
+
+    .method-chip:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(224, 159, 62, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .method-chip.active {
+      background: linear-gradient(145deg, #2D231C 0%, #221B16 100%);
+      border-color: var(--amber-bright);
+      box-shadow: 0 4px 16px -2px rgba(224, 159, 62, 0.35);
+      color: var(--crema-pure);
+    }
+
+    .method-chip.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 2px;
+      background: var(--amber-bright);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .method-chip .chip-icon {
+      font-size: 1.45rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+      line-height: 1;
+    }
+
+    .method-chip .chip-name {
+      font-size: 0.76rem;
+      font-weight: 600;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .method-chip .chip-ratio {
+      font-size: 0.67rem;
+      font-weight: 700;
+      color: var(--amber-bright);
+      background: rgba(224, 159, 62, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* =========================================================
+       CALCULADORA DE RATIO & INPUTS BIDIRECCIONALES
+       ========================================================= */
+    .calculator-layout {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 500px) {
+      .calculator-layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+    }
+
+    .input-group {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .input-group:focus-within {
+      border-color: var(--amber-bright);
+      box-shadow: 0 0 0 1px var(--amber-bright), 0 4px 18px rgba(224, 159, 62, 0.15);
+      background: #1c1613;
+    }
+
+    .input-label-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--crema-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-wrapper {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .big-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--crema-pure);
+      width: 100%;
+      min-width: 0;
+      letter-spacing: -0.03em;
+      padding: 0;
+    }
+
+    /* Quitar flechitas nativas de number */
+    .big-input::-webkit-outer-spin-button,
+    .big-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .big-input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .input-unit {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--amber-bright);
+      background: rgba(224, 159, 62, 0.14);
+      padding: 3px 8px;
+      border-radius: 6px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .stepper-buttons {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .stepper-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      color: var(--crema-soft);
+      padding: 4px 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stepper-btn:hover {
+      background: rgba(224, 159, 62, 0.18);
+      border-color: rgba(224, 159, 62, 0.4);
+      color: var(--amber-bright);
+    }
+
+    /* Divisor central con indicador de Ratio */
+    .ratio-divider-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .ratio-pill-badge {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-active);
+      color: var(--amber-bright);
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ratio-sync-indicator {
+      font-size: 0.68rem;
+      color: var(--crema-dim);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    /* Ratio Slider / Customizador opcional */
+    .ratio-customizer {
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ratio-customizer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.76rem;
+    }
+
+    .ratio-customizer-label {
+      color: var(--crema-muted);
+      font-weight: 600;
+    }
+
+    .ratio-customizer-value {
+      color: var(--amber-bright);
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .ratio-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #332822;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .ratio-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--amber-bright);
+      box-shadow: 0 0 10px var(--amber-glow-strong);
+      cursor: pointer;
+      border: 2px solid #1c1511;
+      transition: transform 0.15s ease;
+    }
+
+    .ratio-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .ratio-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--amber-bright);
+      box-shadow: 0 0 10px var(--amber-glow-strong);
+      cursor: pointer;
+      border: 2px solid #1c1511;
+    }
+
+    .ratio-slider-marks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--crema-dim);
+      font-weight: 600;
+    }
+
+    /* =========================================================
+       TARJETA DE ESTIMACIÓN DE CAFEÍNA EN TIEMPO REAL
+       ========================================================= */
+    .caffeine-hero-card {
+      background: radial-gradient(circle at 80% 20%, rgba(224, 159, 62, 0.14) 0%, transparent 60%),
+                  linear-gradient(160deg, #241D18 0%, #1A1410 100%);
+      border: 1px solid var(--border-active);
+      position: relative;
+    }
+
+    .caffeine-highlight-box {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .caffeine-main-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .caffeine-value-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .caffeine-title-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--crema-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .caffeine-bolt {
+      color: var(--amber-bright);
+      font-size: 1rem;
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.12); filter: drop-shadow(0 0 6px var(--amber-bright)); }
+    }
+
+    .caffeine-numbers {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--crema-pure);
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .caffeine-numbers .caffeine-unit {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--amber-bright);
+      margin-left: 4px;
+    }
+
+    /* Badge Contextual */
+    .caffeine-level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .badge-moderada {
+      background: var(--badge-mild-bg);
+      border: 1px solid var(--badge-mild-border);
+      color: var(--badge-mild-text);
+    }
+
+    .badge-media {
+      background: var(--badge-med-bg);
+      border: 1px solid var(--badge-med-border);
+      color: var(--badge-med-text);
+    }
+
+    .badge-intensa {
+      background: var(--badge-intense-bg);
+      border: 1px solid var(--badge-intense-border);
+      color: var(--badge-intense-text);
+    }
+
+    .badge-limite {
+      background: var(--badge-max-bg);
+      border: 1px solid var(--badge-max-border);
+      color: var(--badge-max-text);
+    }
+
+    /* Barra visual de nivel de cafeína */
+    .caffeine-bar-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .caffeine-bar-track {
+      width: 100%;
+      height: 7px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .caffeine-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #81C784 0%, #FFB74D 45%, #FF8A65 75%, #EF5350 100%);
+      width: 35%;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .caffeine-bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: var(--crema-dim);
+      font-weight: 600;
+    }
+
+    .caffeine-factor-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .factor-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .factor-col .f-label {
+      font-size: 0.68rem;
+      color: var(--crema-dim);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .factor-col .f-val {
+      font-size: 0.88rem;
+      color: var(--crema-soft);
+      font-weight: 700;
+    }
+
+    .caffeine-disclaimer {
+      font-size: 0.72rem;
+      color: var(--crema-dim);
+      line-height: 1.45;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 10px;
+    }
+
+    .caffeine-disclaimer strong {
+      color: var(--crema-muted);
+    }
+
+    /* =========================================================
+       FICHA TÉCNICA DEL MÉTODO
+       ========================================================= */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 500px) {
+      .specs-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .spec-item {
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .spec-label {
+      font-size: 0.67rem;
+      color: var(--crema-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .spec-value {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--crema-pure);
+    }
+
+    .spec-notes-box {
+      background: rgba(224, 159, 62, 0.06);
+      border-left: 3px solid var(--amber-bright);
+      padding: 10px 14px;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.78rem;
+      color: var(--crema-soft);
+      line-height: 1.45;
+    }
+
+    /* =========================================================
+       HERRAMIENTAS AUXILIARES (CRONÓMETRO BARISTA & COPIAR)
+       ========================================================= */
+    .action-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .timer-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      flex: 1;
+    }
+
+    .timer-display {
+      font-size: 1.4rem;
+      font-weight: 800;
+      font-family: monospace;
+      color: var(--amber-bright);
+      letter-spacing: 0.05em;
+    }
+
+    .timer-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-subtle);
+      color: var(--crema-soft);
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(224, 159, 62, 0.16);
+      border-color: var(--border-active);
+      color: var(--amber-bright);
+    }
+
+    .btn-primary-action {
+      background: var(--amber-gold);
+      color: #1a120b;
+      border: none;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-primary-action:hover {
+      background: var(--amber-bright);
+      box-shadow: 0 4px 12px rgba(224, 159, 62, 0.4);
+    }
+
+    /* Toast notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-card);
+      border: 1px solid var(--amber-bright);
+      color: var(--crema-pure);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Footer */
+    .app-footer {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.72rem;
+      color: var(--crema-dim);
+    }
+
+    .app-footer span {
+      color: var(--amber-bright);
+    }
+    /* Botón Instalar / Móvil */
+    .btn-install-mobile {
+      background: linear-gradient(135deg, rgba(224, 159, 62, 0.22) 0%, rgba(244, 178, 81, 0.12) 100%);
+      border: 1px solid var(--border-active);
+      color: var(--amber-bright);
+      padding: 7px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(224, 159, 62, 0.15);
+    }
+
+    .btn-install-mobile:hover {
+      background: linear-gradient(135deg, rgba(224, 159, 62, 0.35) 0%, rgba(244, 178, 81, 0.25) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(224, 159, 62, 0.28);
+    }
+
+    /* Modal de Instalación PWA */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 8, 7, 0.78);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-card {
+      background: #1C1613;
+      border: 1px solid var(--border-active);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(224, 159, 62, 0.15);
+      overflow: hidden;
+      transform: translateY(20px) scale(0.97);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--crema-pure);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: var(--crema-muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-close-modal:hover {
+      color: var(--amber-bright);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .modal-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--crema-muted);
+      padding: 12px 10px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .modal-tab-btn.active {
+      color: var(--amber-bright);
+      border-bottom-color: var(--amber-bright);
+      background: rgba(224, 159, 62, 0.08);
+    }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .step-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--amber-bright);
+      color: #100C0A;
+      font-weight: 800;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-text {
+      font-size: 0.82rem;
+      color: var(--crema-soft);
+      line-height: 1.45;
+    }
+
+    .step-text strong {
+      color: var(--crema-pure);
+    }
+
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .qr-image-wrap {
+      background: #201A16;
+      border: 2px solid var(--amber-bright);
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+
+    .qr-url-box {
+      background: #14100D;
+      border: 1px solid var(--border-subtle);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--amber-bright);
+      word-break: break-all;
+      user-select: all;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- HEADER / BRANDING -->
+    <header class="brand-header">
+      <div class="brand-tagline-badge">
+        <span>☕ Especialidad & Precisión</span>
+      </div>
+      <h1>Barista <span>Pro</span></h1>
+      <p>Calculadora bidireccional de extracción y estimador de cafeína en tiempo real</p>
+      <div style="margin-top: 14px; display: flex; justify-content: center; gap: 8px;">
+        <button type="button" class="btn-install-mobile" id="btn-open-install-modal">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+          <span id="btn-install-text">📲 Guardar en mi Teléfono</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- SECTION 1: SELECTOR DE MÉTODOS -->
+    <section class="card" aria-labelledby="methods-heading">
+      <div class="card-title-row">
+        <h2 id="methods-heading" class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M4 19h16v2H4zm14-8h2a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H4v8a7 7 0 0 0 6 6.92V20H8v-2h8v2h-2v-1.08A7 7 0 0 0 18 11zm-2 0a5 5 0 0 1-10 0V5h10zm4-3a1 1 0 0 1-1 1h-1V5h1a1 1 0 0 1 1 1z"/></svg>
+          Método de Extracción
+        </h2>
+        <span id="active-method-indicator" style="font-size: 0.74rem; color: var(--amber-bright); font-weight: 700;">Espresso (Doble)</span>
+      </div>
+
+      <div class="methods-grid" id="methods-container" role="radiogroup" aria-label="Seleccionar método de café">
+        <!-- Generado dinámicamente con JavaScript -->
+      </div>
+    </section>
+
+    <!-- SECTION 2: CALCULADORA BIDIRECCIONAL -->
+    <section class="card" aria-labelledby="calc-heading">
+      <div class="card-title-row">
+        <h2 id="calc-heading" class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 14H7v-2h6v2zm4-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          Proporción & Ratios Sincronizados
+        </h2>
+        <button type="button" class="btn-secondary" id="btn-reset-defaults" title="Restablecer valores por defecto del método">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Por defecto
+        </button>
+      </div>
+
+      <div class="calculator-layout">
+        <!-- Entrada: Café (g) -->
+        <div class="input-group">
+          <div class="input-label-top">
+            <span>Café Molido</span>
+            <span style="font-size: 0.68rem; color: var(--crema-dim);">Seco</span>
+          </div>
+          <div class="input-wrapper">
+            <input type="number" id="input-coffee" class="big-input" min="1" max="500" step="0.5" inputmode="decimal" aria-label="Gramos de café seco">
+            <span class="input-unit">g</span>
+          </div>
+          <div class="stepper-buttons">
+            <button type="button" class="stepper-btn" onclick="stepCoffee(-1)">-1g</button>
+            <button type="button" class="stepper-btn" onclick="stepCoffee(+1)">+1g</button>
+          </div>
+        </div>
+
+        <!-- Indicador central de Ratio -->
+        <div class="ratio-divider-col">
+          <div class="ratio-pill-badge" id="ratio-display-badge">
+            <span id="ratio-text-val">1:2</span>
+          </div>
+          <span class="ratio-sync-indicator">Sincronizado</span>
+        </div>
+
+        <!-- Entrada: Agua (ml) -->
+        <div class="input-group">
+          <div class="input-label-top">
+            <span>Agua / Porción</span>
+            <span style="font-size: 0.68rem; color: var(--crema-dim);">Total</span>
+          </div>
+          <div class="input-wrapper">
+            <input type="number" id="input-water" class="big-input" min="5" max="5000" step="1" inputmode="decimal" aria-label="Mililitros de agua o infusión">
+            <span class="input-unit">ml</span>
+          </div>
+          <div class="stepper-buttons">
+            <button type="button" class="stepper-btn" onclick="stepWater(-10)">-10ml</button>
+            <button type="button" class="stepper-btn" onclick="stepWater(+10)">+10ml</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ajuste fino del Ratio (Slider interactivo) -->
+      <div class="ratio-customizer">
+        <div class="ratio-customizer-top">
+          <span class="ratio-customizer-label">Ajustar Ratio de Extracción (1 : X)</span>
+          <span class="ratio-customizer-value" id="ratio-slider-val">1 : 2.0</span>
+        </div>
+        <input type="range" id="ratio-slider" class="ratio-slider" min="1" max="22" step="0.5" value="2">
+        <div class="ratio-slider-marks">
+          <span>1:1 Concentrado</span>
+          <span>1:10 Moka</span>
+          <span>1:15 Filtro</span>
+          <span>1:20 Ligero</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ESTIMADOR DE CAFEÍNA EN TIEMPO REAL -->
+    <section class="card caffeine-hero-card" aria-labelledby="caffeine-heading">
+      <div class="card-title-row">
+        <h2 id="caffeine-heading" class="card-title">
+          <span class="caffeine-bolt">⚡</span>
+          Estimación de Cafeína en Tiempo Real
+        </h2>
+        <div id="caffeine-badge" class="caffeine-level-badge badge-moderada">
+          <span class="badge-dot"></span>
+          <span id="badge-text">Moderada</span>
+        </div>
+      </div>
+
+      <div class="caffeine-highlight-box">
+        <div class="caffeine-main-display">
+          <div class="caffeine-value-wrap">
+            <div class="caffeine-title-line">
+              <span>Cafeína Total Estimada</span>
+            </div>
+            <div class="caffeine-numbers">
+              <span id="caffeine-min">120</span> – <span id="caffeine-max">150</span>
+              <span class="caffeine-unit">mg</span>
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary-action" id="btn-copy-recipe">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copiar Receta
+          </button>
+        </div>
+
+        <!-- Barra visual de impacto frente al máximo recomendado de 400mg -->
+        <div class="caffeine-bar-container">
+          <div class="caffeine-bar-track">
+            <div class="caffeine-bar-fill" id="caffeine-progress-bar" style="width: 33%;"></div>
+          </div>
+          <div class="caffeine-bar-meta">
+            <span>0 mg</span>
+            <span id="caffeine-mid-indicator">~135 mg</span>
+            <span>400 mg (Límite diario recomendado)</span>
+          </div>
+        </div>
+
+        <!-- Factores técnicos aplicados para el método -->
+        <div class="caffeine-factor-details">
+          <div class="factor-col">
+            <span class="f-label">Rango Cafeína / gramo</span>
+            <span class="f-val" id="factor-range-display">6.67 – 8.33 mg/g</span>
+          </div>
+          <div class="factor-col">
+            <span class="f-label">Referencia del Método</span>
+            <span class="f-val" id="reference-range-display">120 – 150 mg base</span>
+          </div>
+        </div>
+
+        <p class="caffeine-disclaimer">
+          <strong>Nota de calibración barista:</strong> Rango aproximado calculado para café <em>Coffea Arabica</em> de especialidad. La concentración final se ve afectada por la variedad del grano (Arábica 1.2–1.5% vs. Robusta 2.2–2.7% de cafeína por masa seca), la altura de cultivo, el grado de tueste y la temperatura del agua.
+        </p>
+      </div>
+    </section>
+
+    <!-- SECTION 4: FICHA TÉCNICA DEL MÉTODO Y CRONÓMETRO -->
+    <section class="card" aria-labelledby="specs-heading">
+      <div class="card-title-row">
+        <h2 id="specs-heading" class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          Ficha Técnica & Guía Barista
+        </h2>
+        <span id="spec-method-name" style="font-size: 0.74rem; color: var(--crema-muted); font-weight: 600;">Espresso</span>
+      </div>
+
+      <div class="specs-grid">
+        <div class="spec-item">
+          <span class="spec-label">⚖️ Ratio Base</span>
+          <span class="spec-value" id="spec-ratio">1:2</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">⚙️ Molienda</span>
+          <span class="spec-value" id="spec-grind">Muy fina</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">⏱️ Extracción</span>
+          <span class="spec-value" id="spec-time">25–30 seg</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">☕ Porción Típica</span>
+          <span class="spec-value" id="spec-portion">36 ml (Doble)</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">🌡️ Temperatura</span>
+          <span class="spec-value" id="spec-temp">90 – 93 °C</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">🎯 Perfil</span>
+          <span class="spec-value" id="spec-profile">Cuerpo denso</span>
+        </div>
+      </div>
+
+      <div class="spec-notes-box" id="spec-notes">
+        Presión 9 bar. Molienda muy fina con extracción pareja y crema elástica atigrada.
+      </div>
+
+      <!-- CRONÓMETRO DE EXTRACCIÓN ASISTIDO -->
+      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+        <div class="card-title-row" style="margin-bottom: 8px;">
+          <span class="spec-label" style="color: var(--crema-muted);">⏱️ Cronómetro de Barista</span>
+          <span id="timer-target-note" style="font-size: 0.72rem; color: var(--amber-bright);">Meta: 25–30s</span>
+        </div>
+        <div class="action-row">
+          <div class="timer-card">
+            <span class="timer-display" id="timer-val">00:00.0</span>
+            <div class="timer-controls">
+              <button type="button" class="btn-primary-action" id="btn-timer-start">Iniciar</button>
+              <button type="button" class="btn-secondary" id="btn-timer-reset">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <p>Barista Pro SPA • Especialidad & Extracción • <span>Hecho con Vanilla Web Technologies</span></p>
+    </footer>
+
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-msg" id="toast">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#81C784"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+    <span id="toast-text">¡Receta copiada al portapapeles!</span>
+  </div>
+
+  <!-- MODAL DE INSTALACIÓN / GUARDAR EN EL TELÉFONO -->
+  <div class="modal-overlay" id="install-modal" aria-hidden="true" role="dialog" aria-labelledby="modal-install-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-install-title">
+          <span>📲</span> Guardar Barista Pro en tu Móvil
+        </h3>
+        <button type="button" class="btn-close-modal" id="btn-close-modal" aria-label="Cerrar ventana">&times;</button>
+      </div>
+
+      <div class="modal-tabs" role="tablist">
+        <button type="button" class="modal-tab-btn active" data-tab="tab-iphone" role="tab" aria-selected="true">
+          🍏 iPhone
+        </button>
+        <button type="button" class="modal-tab-btn" data-tab="tab-android" role="tab" aria-selected="false">
+          🤖 Android
+        </button>
+        <button type="button" class="modal-tab-btn" data-tab="tab-wifi" role="tab" aria-selected="false">
+          📶 Conectar por Wi-Fi
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- TAB 1: IPHONE (SAFARI) -->
+        <div class="tab-panel active" id="tab-iphone" role="tabpanel">
+          <p style="font-size: 0.8rem; color: var(--crema-muted);">
+            En iOS Safari no necesitas pasar por la App Store. Funciona como una <strong>PWA nativa</strong> a pantalla completa y sin conexión:
+          </p>
+          <div class="step-list">
+            <div class="step-item">
+              <span class="step-badge">1</span>
+              <div class="step-text">
+                Abre esta aplicación en <strong>Safari</strong> en tu iPhone.
+              </div>
+            </div>
+            <div class="step-item">
+              <span class="step-badge">2</span>
+              <div class="step-text">
+                Toca el botón <strong>Compartir</strong> <span style="font-size: 1rem;">⎋</span> (el icono del cuadrado con una flecha hacia arriba en la barra inferior).
+              </div>
+            </div>
+            <div class="step-item">
+              <span class="step-badge">3</span>
+              <div class="step-text">
+                Desplázate hacia abajo y selecciona <strong>"Agregar a pantalla de inicio"</strong> <span style="color: var(--amber-bright); font-weight: 800;">[+]</span>.
+              </div>
+            </div>
+            <div class="step-item">
+              <span class="step-badge">4</span>
+              <div class="step-text">
+                Toca <strong>"Agregar"</strong> arriba a la derecha. ¡Listo! Ya tienes el icono de Barista Pro en tu pantalla de inicio.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: ANDROID (CHROME) -->
+        <div class="tab-panel" id="tab-android" role="tabpanel">
+          <p style="font-size: 0.8rem; color: var(--crema-muted);">
+            En Android puedes instalarla directamente desde Google Chrome:
+          </p>
+          <div id="native-install-section" style="display: none; margin-bottom: 8px;">
+            <button type="button" class="btn-primary-action" id="btn-native-install-prompt" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.85rem;">
+              ⚡ Instalar App Ahora Mismo
+            </button>
+          </div>
+          <div class="step-list">
+            <div class="step-item">
+              <span class="step-badge">1</span>
+              <div class="step-text">
+                Abre el enlace en <strong>Google Chrome</strong> en tu teléfono.
+              </div>
+            </div>
+            <div class="step-item">
+              <span class="step-badge">2</span>
+              <div class="step-text">
+                Toca el menú de los <strong>tres puntos (⋮)</strong> en la esquina superior derecha.
+              </div>
+            </div>
+            <div class="step-item">
+              <span class="step-badge">3</span>
+              <div class="step-text">
+                Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.
+              </div>
+            </div>
+            <div class="step-item">
+              <span class="step-badge">4</span>
+              <div class="step-text">
+                Confirma la instalación. Se creará el acceso directo con icono oficial en tu cajón de aplicaciones.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: CONECTAR POR WI-FI DESDE LA COMPUTADORA -->
+        <div class="tab-panel" id="tab-wifi" role="tabpanel">
+          <p style="font-size: 0.8rem; color: var(--crema-muted);">
+            Para abrirla en tu celular ahora mismo usando tu red local Wi-Fi:
+          </p>
+          <div class="qr-container">
+            <div class="qr-image-wrap">
+              <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=http%3A%2F%2F10.40.3.29%3A3000&color=f4b251&bgcolor=201a16" alt="Código QR para abrir en el móvil" width="160" height="160" style="display: block; border-radius: 6px;">
+            </div>
+            <span style="font-size: 0.75rem; color: var(--crema-dim);">Apunta la cámara de tu celular al código QR o abre la URL:</span>
+            <div class="qr-url-box">
+              <span id="local-server-url">http://10.40.3.29:3000</span>
+              <button type="button" class="btn-secondary" id="btn-copy-url" style="padding: 4px 8px; font-size: 0.72rem;">Copiar</button>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--crema-dim); line-height: 1.4;">
+              * Asegúrate de ejecutar <strong>iniciar-servidor-movil.bat</strong> en tu PC y que tu teléfono esté conectado al mismo Wi-Fi.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       JAVASCRIPT ES6+ (LÓGICA, SINCRONIZACIÓN Y ESTIMACIONES)
+       ========================================================= -->
+  <script>
+    /**
+     * MATRIZ DE MÉTODOS Y DATOS TÉCNICOS
+     * Factores de cafeína basados en gramos de café seco y parámetros oficiales
+     */
+    const METHODS = [
+      {
+        id: 'espresso',
+        name: 'Espresso (Doble)',
+        shortName: 'Espresso',
+        icon: '☕',
+        ratio: 2,
+        ratioLabel: '1:2',
+        defaultCoffee: 18,
+        defaultWater: 36,
+        factorMin: 6.67,
+        factorMax: 8.33,
+        refCaffeine: '120 – 150 mg',
+        grind: 'Muy fina',
+        time: '25 – 30 seg',
+        temp: '90 – 93 °C',
+        portion: '36 ml (Doble shot)',
+        profile: 'Denso y cremoso',
+        notes: 'Molienda muy fina. Presión de 9 bares. Tiempo objetivo de extracción: 25–30 segundos con crema elástica dorada.'
+      },
+      {
+        id: 'v60',
+        name: 'V60 / Goteo',
+        shortName: 'V60',
+        icon: '⏳',
+        ratio: 16,
+        ratioLabel: '1:16',
+        defaultCoffee: 16,
+        defaultWater: 256,
+        factorMin: 6.25,
+        factorMax: 8.75,
+        refCaffeine: '100 – 140 mg',
+        grind: 'Media-fina',
+        time: '~3:00 min',
+        temp: '92 – 94 °C',
+        portion: '256 ml (1 taza)',
+        profile: 'Cuerpo limpio y floral',
+        notes: 'Molienda media-fina. Pre-infusión (bloom) de 45 segundos con el doble de agua (~32-45ml). Vaciado en círculos continuos.'
+      },
+      {
+        id: 'aeropress',
+        name: 'AeroPress',
+        shortName: 'AeroPress',
+        icon: '🔬',
+        ratio: 15,
+        ratioLabel: '1:15',
+        defaultCoffee: 17,
+        defaultWater: 255,
+        factorMin: 6.47,
+        factorMax: 8.82,
+        refCaffeine: '110 – 150 mg',
+        grind: 'Media',
+        time: '1:30 – 2:00 min',
+        temp: '85 – 88 °C',
+        portion: '255 ml',
+        profile: 'Cuerpo balanceado',
+        notes: 'Molienda media. Método directo o invertido. Infusión de 1 minuto, agitación suave y prensado lento durante 30 segundos.'
+      },
+      {
+        id: 'french-press',
+        name: 'Prensa Francesa',
+        shortName: 'Prensa',
+        icon: '🫖',
+        ratio: 15,
+        ratioLabel: '1:15',
+        defaultCoffee: 20,
+        defaultWater: 300,
+        factorMin: 6.50,
+        factorMax: 9.00,
+        refCaffeine: '130 – 180 mg',
+        grind: 'Gruesa',
+        time: '4:00 min',
+        temp: '93 – 96 °C',
+        portion: '300 ml',
+        profile: 'Cuerpo untuoso y sedoso',
+        notes: 'Molienda gruesa. Inmersión total durante 4 minutos. Romper la costra superficial, retirar restos y bajar el émbolo suavemente.'
+      },
+      {
+        id: 'chemex',
+        name: 'Chemex',
+        shortName: 'Chemex',
+        icon: '🧪',
+        ratio: 16,
+        ratioLabel: '1:16',
+        defaultCoffee: 30,
+        defaultWater: 480,
+        factorMin: 5.67,
+        factorMax: 7.00,
+        refCaffeine: '170 – 210 mg',
+        grind: 'Media-gruesa',
+        time: '4:00 – 4:30 min',
+        temp: '93 – 95 °C',
+        portion: '480 ml (2 tazas)',
+        profile: 'Ultra brillante y sin aceites',
+        notes: 'Molienda media-gruesa. Los filtros gruesos especiales retienen casi la totalidad de aceites pesados y partículas insolubles.'
+      },
+      {
+        id: 'moka',
+        name: 'Cafetera Moka',
+        shortName: 'Moka',
+        icon: '🔥',
+        ratio: 10,
+        ratioLabel: '1:10',
+        defaultCoffee: 18,
+        defaultWater: 180,
+        factorMin: 5.55,
+        factorMax: 11.11,
+        refCaffeine: '100 – 200 mg',
+        grind: 'Fina-media',
+        time: 'Fuego medio-bajo',
+        temp: 'Ebullición controlada',
+        portion: '180 ml',
+        profile: 'Intenso, casi espresso',
+        notes: 'Molienda fina-media. Llenar la base con agua precalentada hasta la válvula. Mantener fuego bajo para evitar sobre-quemar el café.'
+      },
+      {
+        id: 'cold-brew-rtb',
+        name: 'Cold Brew (RTD)',
+        shortName: 'Cold Brew',
+        icon: '🧊',
+        ratio: 15,
+        ratioLabel: '1:15',
+        defaultCoffee: 16,
+        defaultWater: 240,
+        factorMin: 7.50,
+        factorMax: 10.00,
+        refCaffeine: '120 – 160 mg',
+        grind: 'Muy gruesa',
+        time: '12 – 16 hrs',
+        temp: 'Fría / Ambiente',
+        portion: '240 ml (Vaso con hielo)',
+        profile: 'Baja acidez, dulzor alto',
+        notes: 'Listo para beber. Molienda muy gruesa. Maceración prolongada en frío. Notas suaves a cacao y menor amargor por taninos.'
+      },
+      {
+        id: 'cold-brew-conc',
+        name: 'Cold Brew Conc.',
+        shortName: 'CB Conc.',
+        icon: '❄️',
+        ratio: 8,
+        ratioLabel: '1:8',
+        defaultCoffee: 30,
+        defaultWater: 240,
+        factorMin: 6.67,
+        factorMax: 9.33,
+        refCaffeine: '200 – 280 mg',
+        grind: 'Muy gruesa',
+        time: '16 – 24 hrs',
+        temp: 'Refrigerado (4–6 °C)',
+        portion: '120 ml concentrado',
+        profile: 'Muy concentrado',
+        notes: 'Concentrado denso para diluir en proporción 1:1 con agua, hielo, tónica o leche de avena. Maceración refrigerada 16–24 hrs.'
+      }
+    ];
+
+    // Estado de la aplicación
+    let currentMethodIndex = 0;
+    let currentRatio = METHODS[0].ratio; // Ratio multiplicador (Agua = Café * currentRatio)
+
+    // Elementos del DOM
+    const methodsContainer = document.getElementById('methods-container');
+    const activeMethodIndicator = document.getElementById('active-method-indicator');
+    const inputCoffee = document.getElementById('input-coffee');
+    const inputWater = document.getElementById('input-water');
+    const ratioDisplayBadge = document.getElementById('ratio-display-badge');
+    const ratioTextVal = document.getElementById('ratio-text-val');
+    const ratioSlider = document.getElementById('ratio-slider');
+    const ratioSliderVal = document.getElementById('ratio-slider-val');
+    const btnResetDefaults = document.getElementById('btn-reset-defaults');
+
+    // Elementos de Cafeína
+    const caffeineMinEl = document.getElementById('caffeine-min');
+    const caffeineMaxEl = document.getElementById('caffeine-max');
+    const caffeineBadge = document.getElementById('caffeine-badge');
+    const badgeText = document.getElementById('badge-text');
+    const caffeineProgressBar = document.getElementById('caffeine-progress-bar');
+    const caffeineMidIndicator = document.getElementById('caffeine-mid-indicator');
+    const factorRangeDisplay = document.getElementById('factor-range-display');
+    const referenceRangeDisplay = document.getElementById('reference-range-display');
+
+    // Ficha técnica
+    const specMethodName = document.getElementById('spec-method-name');
+    const specRatio = document.getElementById('spec-ratio');
+    const specGrind = document.getElementById('spec-grind');
+    const specTime = document.getElementById('spec-time');
+    const specPortion = document.getElementById('spec-portion');
+    const specTemp = document.getElementById('spec-temp');
+    const specProfile = document.getElementById('spec-profile');
+    const specNotes = document.getElementById('spec-notes');
+    const timerTargetNote = document.getElementById('timer-target-note');
+
+    // Utilidades
+    const btnCopyRecipe = document.getElementById('btn-copy-recipe');
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+
+    /**
+     * Inicializar chips de métodos
+     */
+    function initMethodSelector() {
+      methodsContainer.innerHTML = '';
+      METHODS.forEach((method, index) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = `method-chip ${index === currentMethodIndex ? 'active' : ''}`;
+        chip.setAttribute('role', 'radio');
+        chip.setAttribute('aria-checked', index === currentMethodIndex ? 'true' : 'false');
+        chip.innerHTML = `
+          <span class="chip-icon">${method.icon}</span>
+          <span class="chip-name">${method.name}</span>
+          <span class="chip-ratio">${method.ratioLabel}</span>
+        `;
+        chip.addEventListener('click', () => selectMethod(index));
+        methodsContainer.appendChild(chip);
+      });
+    }
+
+    /**
+     * Selección de método
+     */
+    function selectMethod(index) {
+      currentMethodIndex = index;
+      const method = METHODS[index];
+
+      // Actualizar chips activos
+      const chips = methodsContainer.querySelectorAll('.method-chip');
+      chips.forEach((c, i) => {
+        const isActive = i === index;
+        c.classList.toggle('active', isActive);
+        c.setAttribute('aria-checked', isActive ? 'true' : 'false');
+      });
+
+      // Actualizar ratio actual
+      currentRatio = method.ratio;
+      ratioSlider.value = currentRatio;
+      updateRatioDisplay(currentRatio);
+
+      // Cargar valores por defecto
+      inputCoffee.value = method.defaultCoffee;
+      inputWater.value = method.defaultWater;
+
+      // Actualizar ficha técnica y cafeína
+      activeMethodIndicator.textContent = method.name;
+      updateTechnicalSpecs(method);
+      calculateCaffeine();
+    }
+
+    /**
+     * Actualiza la ficha técnica complementaria
+     */
+    function updateTechnicalSpecs(method) {
+      specMethodName.textContent = method.name;
+      specRatio.textContent = method.ratioLabel;
+      specGrind.textContent = method.grind;
+      specTime.textContent = method.time;
+      specPortion.textContent = method.portion;
+      specTemp.textContent = method.temp;
+      specProfile.textContent = method.profile;
+      specNotes.textContent = method.notes;
+      timerTargetNote.textContent = `Meta sugerida: ${method.time}`;
+      factorRangeDisplay.textContent = `${method.factorMin.toFixed(2)} – ${method.factorMax.toFixed(2)} mg/g`;
+      referenceRangeDisplay.textContent = method.refCaffeine;
+    }
+
+    /**
+     * Actualiza la visualización del ratio
+     */
+    function updateRatioDisplay(ratioVal) {
+      const formatted = Number(ratioVal).toFixed(1).replace(/\.0$/, '');
+      ratioTextVal.textContent = `1:${formatted}`;
+      ratioSliderVal.textContent = `1 : ${Number(ratioVal).toFixed(1)}`;
+    }
+
+    /**
+     * Recalcula y renderiza la estimación de cafeína en tiempo real
+     */
+    function calculateCaffeine() {
+      const coffeeGrams = parseFloat(inputCoffee.value) || 0;
+      const method = METHODS[currentMethodIndex];
+
+      // Fórmulas requeridas:
+      // Cafeína Mínima = gramos_café * factor_min_del_método
+      // Cafeína Máxima = gramos_café * factor_max_del_método
+      const minCaffeine = Math.round(coffeeGrams * method.factorMin);
+      const maxCaffeine = Math.round(coffeeGrams * method.factorMax);
+      const avgCaffeine = Math.round((minCaffeine + maxCaffeine) / 2);
+
+      caffeineMinEl.textContent = minCaffeine;
+      caffeineMaxEl.textContent = maxCaffeine;
+      caffeineMidIndicator.textContent = `~${avgCaffeine} mg`;
+
+      // Barra de progreso frente a 400 mg (Límite diario recomendado)
+      const percentage = Math.min(Math.round((avgCaffeine / 400) * 100), 100);
+      caffeineProgressBar.style.width = `${Math.max(percentage, 5)}%`;
+
+      // Badge contextual de nivel de cafeína
+      updateCaffeineBadge(avgCaffeine);
+    }
+
+    /**
+     * Determina el badge contextual de cafeína
+     * Moderada < 150 mg | Media 150-250 mg | Intensa > 250 mg | Límite > 400 mg
+     */
+    function updateCaffeineBadge(avgMg) {
+      caffeineBadge.className = 'caffeine-level-badge';
+
+      if (avgMg < 150) {
+        caffeineBadge.classList.add('badge-moderada');
+        badgeText.textContent = 'Moderada (<150 mg)';
+      } else if (avgMg <= 250) {
+        caffeineBadge.classList.add('badge-media');
+        badgeText.textContent = 'Media (150–250 mg)';
+      } else if (avgMg <= 400) {
+        caffeineBadge.classList.add('badge-intensa');
+        badgeText.textContent = 'Intensa (>250 mg)';
+      } else {
+        caffeineBadge.classList.add('badge-limite');
+        badgeText.textContent = '⚠️ Alta (>400 mg)';
+      }
+    }
+
+    /**
+     * Entradas bidireccionales sincronizadas (evento 'input')
+     */
+    // 1. Modificar Gramos de Café -> Recalcula Agua (ml)
+    inputCoffee.addEventListener('input', () => {
+      const coffee = parseFloat(inputCoffee.value);
+      if (!isNaN(coffee) && coffee > 0) {
+        const calculatedWater = Math.round(coffee * currentRatio * 10) / 10;
+        inputWater.value = calculatedWater % 1 === 0 ? calculatedWater : calculatedWater.toFixed(1);
+      } else if (inputCoffee.value === '') {
+        inputWater.value = '';
+      }
+      calculateCaffeine();
+    });
+
+    // 2. Modificar Agua (ml) -> Recalcula Café (g)
+    inputWater.addEventListener('input', () => {
+      const water = parseFloat(inputWater.value);
+      if (!isNaN(water) && water > 0 && currentRatio > 0) {
+        const calculatedCoffee = Math.round((water / currentRatio) * 10) / 10;
+        inputCoffee.value = calculatedCoffee % 1 === 0 ? calculatedCoffee : calculatedCoffee.toFixed(1);
+      } else if (inputWater.value === '') {
+        inputCoffee.value = '';
+      }
+      calculateCaffeine();
+    });
+
+    /**
+     * Slider para ajustar el ratio de forma personalizada
+     */
+    ratioSlider.addEventListener('input', (e) => {
+      currentRatio = parseFloat(e.target.value);
+      updateRatioDisplay(currentRatio);
+
+      // Al cambiar ratio, sincronizamos manteniendo el café actual como referencia fija
+      const coffee = parseFloat(inputCoffee.value);
+      if (!isNaN(coffee) && coffee > 0) {
+        const calculatedWater = Math.round(coffee * currentRatio * 10) / 10;
+        inputWater.value = calculatedWater % 1 === 0 ? calculatedWater : calculatedWater.toFixed(1);
+      }
+    });
+
+    /**
+     * Botón para restaurar valores por defecto del método
+     */
+    btnResetDefaults.addEventListener('click', () => {
+      const method = METHODS[currentMethodIndex];
+      currentRatio = method.ratio;
+      ratioSlider.value = currentRatio;
+      updateRatioDisplay(currentRatio);
+      inputCoffee.value = method.defaultCoffee;
+      inputWater.value = method.defaultWater;
+      calculateCaffeine();
+      showToast('Valores restaurados por defecto');
+    });
+
+    /**
+     * Steppers para ajustes rápidos táctiles
+     */
+    window.stepCoffee = function(delta) {
+      const current = parseFloat(inputCoffee.value) || 0;
+      const next = Math.max(1, Math.round((current + delta) * 10) / 10);
+      inputCoffee.value = next;
+      inputCoffee.dispatchEvent(new Event('input'));
+    };
+
+    window.stepWater = function(delta) {
+      const current = parseFloat(inputWater.value) || 0;
+      const next = Math.max(5, Math.round(current + delta));
+      inputWater.value = next;
+      inputWater.dispatchEvent(new Event('input'));
+    };
+
+    /**
+     * Copiar receta al portapapeles
+     */
+    btnCopyRecipe.addEventListener('click', () => {
+      const method = METHODS[currentMethodIndex];
+      const coffee = inputCoffee.value;
+      const water = inputWater.value;
+      const cMin = caffeineMinEl.textContent;
+      const cMax = caffeineMaxEl.textContent;
+      const ratioStr = ratioTextVal.textContent;
+
+      const recipeText = `☕ RECETA BARISTA PRO: ${method.name}
+━━━━━━━━━━━━━━━━━━━━━
+⚖️ Ratio: ${ratioStr}
+🫘 Café seco: ${coffee} g
+💧 Agua/Extracción: ${water} ml
+⚙️ Molienda: ${method.grind}
+⏱️ Tiempo: ${method.time}
+🌡️ Temperatura: ${method.temp}
+⚡ Cafeína estimada: ${cMin} – ${cMax} mg (${badgeText.textContent})
+📝 Notas: ${method.notes}
+━━━━━━━━━━━━━━━━━━━━━
+Generado con Barista Pro (Especialidad)`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(recipeText)
+          .then(() => showToast('¡Receta copiada al portapapeles! 📋'))
+          .catch(() => fallbackCopy(recipeText));
+      } else {
+        fallbackCopy(recipeText);
+      }
+    });
+
+    function fallbackCopy(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('¡Receta copiada al portapapeles! 📋');
+      } catch (err) {
+        showToast('No se pudo copiar automáticamente');
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function showToast(msg) {
+      toastText.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2600);
+    }
+
+    /**
+     * CRONÓMETRO DE BARISTA ASISTIDO
+     */
+    let timerInterval = null;
+    let timerStartTime = 0;
+    let timerElapsedTime = 0;
+    let isTimerRunning = false;
+
+    const timerVal = document.getElementById('timer-val');
+    const btnTimerStart = document.getElementById('btn-timer-start');
+    const btnTimerReset = document.getElementById('btn-timer-reset');
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const tenths = Math.floor((ms % 1000) / 100);
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+      return `${mStr}:${sStr}.${tenths}`;
+    }
+
+    btnTimerStart.addEventListener('click', () => {
+      if (!isTimerRunning) {
+        // Start
+        isTimerRunning = true;
+        timerStartTime = Date.now() - timerElapsedTime;
+        timerInterval = setInterval(() => {
+          timerElapsedTime = Date.now() - timerStartTime;
+          timerVal.textContent = formatTime(timerElapsedTime);
+        }, 80);
+        btnTimerStart.textContent = 'Pausar';
+        btnTimerStart.style.background = '#d32f2f';
+      } else {
+        // Pause
+        isTimerRunning = false;
+        clearInterval(timerInterval);
+        btnTimerStart.textContent = 'Reanudar';
+        btnTimerStart.style.background = 'var(--amber-gold)';
+      }
+    });
+
+    btnTimerReset.addEventListener('click', () => {
+      isTimerRunning = false;
+      clearInterval(timerInterval);
+      timerElapsedTime = 0;
+      timerVal.textContent = '00:00.0';
+      btnTimerStart.textContent = 'Iniciar';
+      btnTimerStart.style.background = 'var(--amber-gold)';
+    });
+
+    /**
+     * PWA SERVICE WORKER REGISTRATION
+     */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado:', reg.scope))
+          .catch(err => console.log('Error al registrar Service Worker:', err));
+      });
+    }
+
+    /**
+     * MODAL DE INSTALACIÓN & SOPORTE PWA
+     */
+    const installModal = document.getElementById('install-modal');
+    const btnOpenInstallModal = document.getElementById('btn-open-install-modal');
+    const btnCloseModal = document.getElementById('btn-close-modal');
+    const modalTabBtns = document.querySelectorAll('.modal-tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const btnCopyUrl = document.getElementById('btn-copy-url');
+    const localServerUrl = document.getElementById('local-server-url');
+    const btnNativeInstallPrompt = document.getElementById('btn-native-install-prompt');
+    const nativeInstallSection = document.getElementById('native-install-section');
+    const btnInstallText = document.getElementById('btn-install-text');
+
+    let deferredPrompt = null;
+
+    // Detectar si el navegador ofrece instalación nativa (Android Chrome)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (nativeInstallSection) nativeInstallSection.style.display = 'block';
+      if (btnInstallText) btnInstallText.textContent = '⚡ Instalar App';
+    });
+
+    if (btnNativeInstallPrompt) {
+      btnNativeInstallPrompt.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            showToast('¡Barista Pro instalada con éxito! 🎉');
+            closeModal();
+          }
+          deferredPrompt = null;
+        }
+      });
+    }
+
+    // Abrir modal
+    btnOpenInstallModal.addEventListener('click', () => {
+      if (window.location.protocol.startsWith('http') && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        localServerUrl.textContent = window.location.href;
+        const qrImg = document.getElementById('qr-code-img');
+        if (qrImg) {
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(window.location.href)}&color=f4b251&bgcolor=201a16`;
+        }
+      }
+      installModal.classList.add('active');
+      installModal.setAttribute('aria-hidden', 'false');
+    });
+
+    // Cerrar modal
+    function closeModal() {
+      installModal.classList.remove('active');
+      installModal.setAttribute('aria-hidden', 'true');
+    }
+
+    btnCloseModal.addEventListener('click', closeModal);
+    installModal.addEventListener('click', (e) => {
+      if (e.target === installModal) closeModal();
+    });
+
+    // Tabs del modal
+    modalTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        modalTabBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        tabPanels.forEach(p => p.classList.remove('active'));
+
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        const targetId = btn.getAttribute('data-tab');
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) targetPanel.classList.add('active');
+      });
+    });
+
+    // Copiar URL local
+    if (btnCopyUrl) {
+      btnCopyUrl.addEventListener('click', () => {
+        const url = localServerUrl.textContent;
+        navigator.clipboard.writeText(url)
+          .then(() => showToast('¡Enlace copiado! 📋'))
+          .catch(() => fallbackCopy(url));
+      });
+    }
+
+    // Inicializar al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      initMethodSelector();
+      selectMethod(0); // Cargar Espresso por defecto
+    });
+  </script>
+</body>
+</html>

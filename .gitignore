@@ -1,0 +1,10 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+*.log
+npm-debug.log*
+
+# Node (por si se usa en el futuro)
+node_modules/
