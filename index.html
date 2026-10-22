@@ -523,17 +523,101 @@
       gap: 14px;
     }
 
-    .caffeine-main-display {
+    /* Control interactivo de Cafeína Objetivo */
+    .caffeine-target-box {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid var(--border-active);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: var(--transition);
+    }
+
+    .caffeine-target-box:focus-within {
+      box-shadow: 0 0 0 1px var(--amber-bright), 0 4px 20px rgba(224, 159, 62, 0.18);
+      background: #191310;
+    }
+
+    .caffeine-target-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .caffeine-presets-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .preset-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--crema-soft);
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .preset-chip:hover {
+      background: rgba(224, 159, 62, 0.18);
+      border-color: var(--amber-bright);
+      color: var(--amber-bright);
+      transform: translateY(-1px);
+    }
+
+    .preset-chip.active {
+      background: var(--amber-gold);
+      color: #100C0A;
+      border-color: var(--amber-bright);
+      box-shadow: 0 2px 8px rgba(224, 159, 62, 0.35);
+    }
+
+    .caffeine-range-banner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
     }
 
-    .caffeine-value-wrap {
+    .caffeine-range-text {
       display: flex;
       flex-direction: column;
+      gap: 2px;
+    }
+
+    .caffeine-range-sub {
+      font-size: 0.7rem;
+      color: var(--crema-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .caffeine-range-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--crema-pure);
+      letter-spacing: -0.02em;
+    }
+
+    .caffeine-range-val span {
+      color: var(--amber-bright);
     }
 
     .caffeine-title-line {
@@ -556,22 +640,6 @@
     @keyframes pulse-glow {
       0%, 100% { opacity: 0.85; transform: scale(1); }
       50% { opacity: 1; transform: scale(1.12); filter: drop-shadow(0 0 6px var(--amber-bright)); }
-    }
-
-    .caffeine-numbers {
-      font-size: 2.3rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--crema-pure);
-      line-height: 1.1;
-      margin-top: 4px;
-    }
-
-    .caffeine-numbers .caffeine-unit {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--amber-bright);
-      margin-left: 4px;
     }
 
     /* Badge Contextual */
@@ -1190,12 +1258,12 @@
       </div>
     </section>
 
-    <!-- SECTION 3: ESTIMADOR DE CAFEÍNA EN TIEMPO REAL -->
+    <!-- SECTION 3: ESTIMADOR & REGULADOR DE CAFEÍNA TRIDIRECCIONAL -->
     <section class="card caffeine-hero-card" aria-labelledby="caffeine-heading">
       <div class="card-title-row">
         <h2 id="caffeine-heading" class="card-title">
           <span class="caffeine-bolt">⚡</span>
-          Estimación de Cafeína en Tiempo Real
+          Dosis de Cafeína & Estimador
         </h2>
         <div id="caffeine-badge" class="caffeine-level-badge badge-moderada">
           <span class="badge-dot"></span>
@@ -1204,17 +1272,54 @@
       </div>
 
       <div class="caffeine-highlight-box">
-        <div class="caffeine-main-display">
-          <div class="caffeine-value-wrap">
-            <div class="caffeine-title-line">
-              <span>Cafeína Total Estimada</span>
+        <!-- Control regulable de Cafeína Objetivo -->
+        <div class="caffeine-target-box">
+          <div class="input-label-top">
+            <span style="display: flex; align-items: center; gap: 5px;">🎯 Cafeína Deseada (Objetivo)</span>
+            <span style="font-size: 0.68rem; color: var(--amber-bright); font-weight: 700;">Recalcula café y agua</span>
+          </div>
+          
+          <div class="caffeine-target-input-row">
+            <div class="input-wrapper" style="flex: 1;">
+              <input type="number" id="input-target-caffeine" class="big-input" min="20" max="600" step="5" value="135" inputmode="numeric" aria-label="Cafeína objetivo en miligramos">
+              <span class="input-unit">mg</span>
             </div>
-            <div class="caffeine-numbers">
-              <span id="caffeine-min">120</span> – <span id="caffeine-max">150</span>
-              <span class="caffeine-unit">mg</span>
+            <div class="stepper-buttons" style="flex-direction: column; width: 62px; margin-top: 0;">
+              <button type="button" class="stepper-btn" onclick="stepCaffeine(+10)">+10mg</button>
+              <button type="button" class="stepper-btn" onclick="stepCaffeine(-10)">-10mg</button>
             </div>
           </div>
 
+          <!-- Slider táctil de ajuste fino de cafeína -->
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <input type="range" id="caffeine-slider" class="ratio-slider" min="30" max="400" step="5" value="135">
+            <div class="ratio-slider-marks">
+              <span>50 mg Suave</span>
+              <span>150 mg Media</span>
+              <span>250 mg Intensa</span>
+              <span>400 mg Límite</span>
+            </div>
+          </div>
+
+          <!-- Presets rápidos para seleccionar cafeína deseada -->
+          <div class="caffeine-presets-wrap">
+            <button type="button" class="preset-chip" data-val="80" onclick="setTargetCaffeine(80)">80 mg</button>
+            <button type="button" class="preset-chip" data-val="120" onclick="setTargetCaffeine(120)">120 mg</button>
+            <button type="button" class="preset-chip" data-val="150" onclick="setTargetCaffeine(150)">150 mg</button>
+            <button type="button" class="preset-chip" data-val="200" onclick="setTargetCaffeine(200)">200 mg</button>
+            <button type="button" class="preset-chip" data-val="250" onclick="setTargetCaffeine(250)">250 mg</button>
+            <button type="button" class="preset-chip" data-val="300" onclick="setTargetCaffeine(300)">300 mg</button>
+          </div>
+        </div>
+
+        <!-- Banner del rango resultante según extracción y botón de copia -->
+        <div class="caffeine-range-banner">
+          <div class="caffeine-range-text">
+            <span class="caffeine-range-sub">⚡ Rango esperado por extracción:</span>
+            <div class="caffeine-range-val">
+              <span id="caffeine-min">120</span> – <span id="caffeine-max">150</span> mg
+            </div>
+          </div>
           <button type="button" class="btn-primary-action" id="btn-copy-recipe">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar Receta
@@ -1246,7 +1351,7 @@
         </div>
 
         <p class="caffeine-disclaimer">
-          <strong>Nota de calibración barista:</strong> Rango aproximado calculado para café <em>Coffea Arabica</em> de especialidad. La concentración final se ve afectada por la variedad del grano (Arábica 1.2–1.5% vs. Robusta 2.2–2.7% de cafeína por masa seca), la altura de cultivo, el grado de tueste y la temperatura del agua.
+          <strong>Calibración tri-direccional:</strong> Puedes regular cualquiera de los 3 valores (<strong>Café</strong>, <strong>Agua</strong> o <strong>Cafeína deseada</strong>) y los demás se ajustarán automáticamente respetando el ratio y los factores del método activo.
         </p>
       </div>
     </section>
@@ -1619,6 +1724,8 @@
     const btnResetDefaults = document.getElementById('btn-reset-defaults');
 
     // Elementos de Cafeína
+    const inputTargetCaffeine = document.getElementById('input-target-caffeine');
+    const caffeineSlider = document.getElementById('caffeine-slider');
     const caffeineMinEl = document.getElementById('caffeine-min');
     const caffeineMaxEl = document.getElementById('caffeine-max');
     const caffeineBadge = document.getElementById('caffeine-badge');
@@ -1724,7 +1831,7 @@
     /**
      * Recalcula y renderiza la estimación de cafeína en tiempo real
      */
-    function calculateCaffeine() {
+    function calculateCaffeine(source) {
       const coffeeGrams = parseFloat(inputCoffee.value) || 0;
       const method = METHODS[currentMethodIndex];
 
@@ -1739,13 +1846,88 @@
       caffeineMaxEl.textContent = maxCaffeine;
       caffeineMidIndicator.textContent = `~${avgCaffeine} mg`;
 
+      // Sincronizar input y slider de cafeína objetivo si no fueron ellos el origen
+      if (source !== 'caffeine') {
+        if (inputTargetCaffeine && document.activeElement !== inputTargetCaffeine) {
+          inputTargetCaffeine.value = avgCaffeine;
+        }
+        if (caffeineSlider && document.activeElement !== caffeineSlider) {
+          caffeineSlider.value = avgCaffeine;
+        }
+      }
+
       // Barra de progreso frente a 400 mg (Límite diario recomendado)
       const percentage = Math.min(Math.round((avgCaffeine / 400) * 100), 100);
       caffeineProgressBar.style.width = `${Math.max(percentage, 5)}%`;
 
-      // Badge contextual de nivel de cafeína
+      // Badge contextual de nivel de cafeína y estado de presets
       updateCaffeineBadge(avgCaffeine);
+      updatePresetChips(avgCaffeine);
     }
+
+    /**
+     * Sincronización inversa tridireccional:
+     * El usuario especifica la Cafeína Deseada (mg) -> Recalcula Café (g) y Agua (ml)
+     */
+    function syncFromCaffeine(targetMg) {
+      const method = METHODS[currentMethodIndex];
+      const factorAvg = (method.factorMin + method.factorMax) / 2;
+
+      if (!isNaN(targetMg) && targetMg > 0) {
+        // Café (g) = targetMg / factorAvg
+        const calculatedCoffee = Math.round((targetMg / factorAvg) * 10) / 10;
+        inputCoffee.value = calculatedCoffee;
+
+        // Agua (ml) = calculatedCoffee * currentRatio
+        const calculatedWater = Math.round(calculatedCoffee * currentRatio * 10) / 10;
+        inputWater.value = calculatedWater % 1 === 0 ? calculatedWater : calculatedWater.toFixed(1);
+
+        // Actualizar slider si no tiene el foco
+        if (caffeineSlider && document.activeElement !== caffeineSlider) {
+          caffeineSlider.value = targetMg;
+        }
+
+        // Rango resultante con el café calculado
+        const minCaffeine = Math.round(calculatedCoffee * method.factorMin);
+        const maxCaffeine = Math.round(calculatedCoffee * method.factorMax);
+
+        caffeineMinEl.textContent = minCaffeine;
+        caffeineMaxEl.textContent = maxCaffeine;
+        caffeineMidIndicator.textContent = `~${targetMg} mg`;
+
+        const percentage = Math.min(Math.round((targetMg / 400) * 100), 100);
+        caffeineProgressBar.style.width = `${Math.max(percentage, 5)}%`;
+
+        updateCaffeineBadge(targetMg);
+        updatePresetChips(targetMg);
+      }
+    }
+
+    /**
+     * Resalta el chip de preset activo si coincide con la dosis
+     */
+    function updatePresetChips(targetMg) {
+      const chips = document.querySelectorAll('.preset-chip');
+      chips.forEach(chip => {
+        const val = parseInt(chip.getAttribute('data-val'), 10);
+        chip.classList.toggle('active', Math.abs(val - targetMg) <= 5);
+      });
+    }
+
+    /**
+     * Ajustes de cafeína mediante steppers y presets
+     */
+    window.stepCaffeine = function(delta) {
+      const current = parseFloat(inputTargetCaffeine.value) || 120;
+      const next = Math.max(20, Math.min(600, Math.round(current + delta)));
+      inputTargetCaffeine.value = next;
+      syncFromCaffeine(next);
+    };
+
+    window.setTargetCaffeine = function(targetVal) {
+      inputTargetCaffeine.value = targetVal;
+      syncFromCaffeine(targetVal);
+    };
 
     /**
      * Determina el badge contextual de cafeína
@@ -1772,7 +1954,7 @@
     /**
      * Entradas bidireccionales sincronizadas (evento 'input')
      */
-    // 1. Modificar Gramos de Café -> Recalcula Agua (ml)
+    // 1. Modificar Gramos de Café -> Recalcula Agua (ml) y Cafeína
     inputCoffee.addEventListener('input', () => {
       const coffee = parseFloat(inputCoffee.value);
       if (!isNaN(coffee) && coffee > 0) {
@@ -1781,10 +1963,10 @@
       } else if (inputCoffee.value === '') {
         inputWater.value = '';
       }
-      calculateCaffeine();
+      calculateCaffeine('coffee');
     });
 
-    // 2. Modificar Agua (ml) -> Recalcula Café (g)
+    // 2. Modificar Agua (ml) -> Recalcula Café (g) y Cafeína
     inputWater.addEventListener('input', () => {
       const water = parseFloat(inputWater.value);
       if (!isNaN(water) && water > 0 && currentRatio > 0) {
@@ -1793,7 +1975,22 @@
       } else if (inputWater.value === '') {
         inputCoffee.value = '';
       }
-      calculateCaffeine();
+      calculateCaffeine('water');
+    });
+
+    // 3. Modificar Cafeína Objetivo (mg) -> Recalcula Café (g) y Agua (ml)
+    inputTargetCaffeine.addEventListener('input', () => {
+      const val = parseFloat(inputTargetCaffeine.value);
+      if (!isNaN(val) && val > 0) {
+        syncFromCaffeine(val);
+      }
+    });
+
+    // 4. Slider de Cafeína
+    caffeineSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      inputTargetCaffeine.value = val;
+      syncFromCaffeine(val);
     });
 
     /**
@@ -1853,15 +2050,18 @@
       const cMax = caffeineMaxEl.textContent;
       const ratioStr = ratioTextVal.textContent;
 
+      const targetCaff = inputTargetCaffeine ? inputTargetCaffeine.value : '';
+
       const recipeText = `☕ RECETA BARISTA PRO: ${method.name}
 ━━━━━━━━━━━━━━━━━━━━━
+🎯 Cafeína objetivo: ${targetCaff} mg
+⚡ Rango esperado: ${cMin} – ${cMax} mg (${badgeText.textContent})
 ⚖️ Ratio: ${ratioStr}
 🫘 Café seco: ${coffee} g
 💧 Agua/Extracción: ${water} ml
 ⚙️ Molienda: ${method.grind}
 ⏱️ Tiempo: ${method.time}
 🌡️ Temperatura: ${method.temp}
-⚡ Cafeína estimada: ${cMin} – ${cMax} mg (${badgeText.textContent})
 📝 Notas: ${method.notes}
 ━━━━━━━━━━━━━━━━━━━━━
 Generado con Barista Pro (Especialidad)`;
